@@ -5,6 +5,8 @@
 
 #include <elf.h>
 
+#include <boost/algorithm/string/join.hpp>
+
 void print_architecture(const Elf64_Ehdr& elf_header) {
   if (elf_header.e_ident[EI_CLASS] == ELFCLASS32) {
     std::cout << "Elf file is built for 32-bit architecture\n";
@@ -61,7 +63,20 @@ void print_program_header_table(const Elf64_Phdr* phdr_table, Elf64_Half size,
       break;
     }
     case PT_LOAD: {
-      std::cout << "[PT_LOAD] loadable segment\n";
+      std::cout << "[PT_LOAD] loadable segment\n  flags: ";
+      std::vector<std::string> flags;
+      if (phdr_table[i].p_flags & PF_X) {
+        flags.push_back("EXEC");
+      }
+      if (phdr_table[i].p_flags & PF_W) {
+        flags.push_back("WRITE");
+      }
+      if (phdr_table[i].p_flags & PF_R) {
+        flags.push_back("READ");
+      }
+
+      std::cout << boost::algorithm::join(flags, "|") << "\n";
+
       break;
     }
     case PT_DYNAMIC: {
