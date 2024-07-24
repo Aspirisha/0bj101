@@ -1,0 +1,1 @@
+int global_var_in_dso = 1;
