@@ -36,7 +36,42 @@ Note that a definition in a DSO being *weak* has no effects. Weak definitions on
 
 
 ### Inspecting symbol table
-Let's call `objdump -tC multiple_weak_symbols`, which prints symbol table information of the file
+Let's call `objdump -tC build/multiple_weak_symbols/libc.so`, which prints symbol table information of the dynamic library
+
+```
+objdump -tC build/multiple_weak_symbols/libc.so 
+
+build/multiple_weak_symbols/libc.so:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*  0000000000000000 crtstuff.c
+0000000000001040 l     F .text  0000000000000000 deregister_tm_clones
+0000000000001070 l     F .text  0000000000000000 register_tm_clones
+00000000000010b0 l     F .text  0000000000000000 __do_global_dtors_aux
+0000000000004024 l     O .bss   0000000000000001 completed.0
+0000000000003e78 l     O .fini_array    0000000000000000 __do_global_dtors_aux_fini_array_entry
+00000000000010f0 l     F .text  0000000000000000 frame_dummy
+0000000000003e70 l     O .init_array    0000000000000000 __frame_dummy_init_array_entry
+0000000000000000 l    df *ABS*  0000000000000000 c.cpp
+0000000000000000 l    df *ABS*  0000000000000000 crtstuff.c
+0000000000002000 l     O .eh_frame      0000000000000000 __FRAME_END__
+0000000000000000 l    df *ABS*  0000000000000000 
+0000000000003e80 l     O .dynamic       0000000000000000 _DYNAMIC
+0000000000004028 l     O .data  0000000000000000 __TMC_END__
+0000000000004018 l     O .data  0000000000000000 __dso_handle
+0000000000001000 l     F .init  0000000000000000 _init
+00000000000010fc l     F .fini  0000000000000000 _fini
+0000000000004000 l     O .got.plt       0000000000000000 _GLOBAL_OFFSET_TABLE_
+0000000000000000  w      *UND*  0000000000000000 __cxa_finalize
+0000000000004020 g     O .data  0000000000000004 global_var_in_dso
+0000000000000000  w      *UND*  0000000000000000 _ITM_registerTMCloneTable
+0000000000000000  w      *UND*  0000000000000000 _ITM_deregisterTMCloneTable
+0000000000000000  w      *UND*  0000000000000000 __gmon_start__
+```
+
+We see it has only single global symbol named `global_var_in_dso` (`g` flag in the first column of flags), all the other symbols are either local (`l`) or neither local nor global (space flag in the first column), like `__cxa_finalize`. The four symbols that are neither local nor global here also appear to be weak (`w` flag in the second column). 
+
+Calling `objdump -tC build/multiple_weak_symbols/multiple_weaks` on executable file:
 
 ```
 SYMBOL TABLE:

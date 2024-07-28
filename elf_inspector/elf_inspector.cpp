@@ -111,8 +111,18 @@ void print_program_header_table(const Elf64_Phdr* phdr_table, Elf64_Half size,
 }
 
 
-int main() {
-  std::ifstream f("./hello", std::ios::binary);
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    std::cerr << "Expected inspected file as first argument\n";
+    exit(1);
+  }
+
+  std::ifstream f(argv[1], std::ios::binary);
+
+  if (!f) {
+    std::cerr << "Failed to open inspected file\n";
+    exit(1);
+  }
   const std::vector<char> buffer(std::istreambuf_iterator<char>(f), {});
   const Elf64_Ehdr& elf_header = *reinterpret_cast<const Elf64_Ehdr*>(buffer.data());
 
