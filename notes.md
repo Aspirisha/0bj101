@@ -29,7 +29,7 @@ typedef struct {
 Each symbol may be defined with one of following binding types:
 * `STB_LOCAL` - then it has local binding and is not accessible outside of object file
 * `STB_GLOBAL` - the symbol is visible to all object files being combined, so if there is another object file with undefined reference to a symbol defined in this object file with this binding rules, it will be resolved to this symbol
-* `STB_WEAK` - same as global, bu allows multiple definitions of the symbol: when combining multiple object files, linker will forbid having more than one `STB_GLOBAL` entry for the same symbol, while it is ok to have multiple weakly bound definitions and 1 globally bound definition.
+* `STB_WEAK` - same as global, but allows multiple definitions of the symbol: when combining multiple object files, linker will forbid having more than one `STB_GLOBAL` entry for the same symbol, while it is ok to have multiple weakly bound definitions and 1 globally bound definition.
 
 From https://akkadia.org/drepper/dsohowto.pdf:
 Note that a definition in a DSO being *weak* has no effects. Weak definitions only play a role in static linking, and we can have multiple global definitions of the same symbol in distinct DSOs linked dynamically to an executable/other dso. Side note - of course, we will still have problem if we link multiple object files / static libraries when *building* dso - important thing is whether multiple global defintions during linking appear in dynamic libraries or not.
@@ -123,4 +123,20 @@ SYMBOL TABLE:
 0000000000000000  w      *UND*  0000000000000000              __gmon_start__
 0000000000000000  w      *UND*  0000000000000000              _ITM_registerTMCloneTable
 0000000000000000       F *UND*  0000000000000000              std::ios_base::Init::~Init()@GLIBCXX_3.4
+```
+
+### -fPIC and -fpic, GOT and PLT
+
+From [tldp.org](https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html): 
+> Use -fPIC or -fpic to generate code. Whether to use -fPIC or -fpic to generate code is target-dependent. The -fPIC choice always works, but may produce larger code than -fpic (mnenomic to remember this is that PIC is in a larger case, so it may produce larger amounts of code). Using -fpic option usually generates smaller and faster code, but will have platform-dependent limitations, such as the number of globally visible symbols or the size of the code. The linker will tell you whether it fits when you create the shared library. When in doubt, I choose -fPIC, because it always works.
+
+Global Offset Table is used when we compile the objects with `-fPIC/-fpic` flag, and is filled by dynamic linker at runtime. Each relocatable symbol gets entry inside GOT, and this entry address is known during link time (i.e. static linking, not runtime). Dynamic linker then populates the entry when performs symbol lookup.
+
+PLT, or Procedure Linkage Table, is a similar concept used for externally linked functions. While the GOT is modified, however, PLT is *sometimes* not and hence *may be* located in a read-only segment. Actual address of the relocated function in case of read-only PLT is saved in GOT again, where each function has corresponding entry which can be found from the PLT table.
+
+When we do not use `-fPIC/-fpic`, we end up with relocations being written right into `text` segment, because in this case the code may contain absolute addresses for global variables and functions, which will have to be modified during startup by dynamic linker. This is bad, because it prevents multiple running executables using this binary object (compiled without `fpic`) from sharing the pages contining mapped code.
+
+It is possible to see if a binary object contains text relocations via command:
+```
+readelf -d binary | grep TEXTREL
 ```
