@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(elf_inspector)
 add_subdirectory(multiple_weak_symbols)
-
+add_subdirectory(visibility)
