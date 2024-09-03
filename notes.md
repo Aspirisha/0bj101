@@ -140,3 +140,5 @@ It is possible to see if a binary object contains text relocations via command:
 ```
 readelf -d binary | grep TEXTREL
 ```
+
+Note, that relocation process is needed because definitions of the used symbols may be in another binary objects, than the current one. If they were in the same binary objects, simple application of offset relative to load address, stored in PIC register, would have been enough and all the GOT/PLT stuff would not be required. But the thing with relocatable symbols is that they can be potentially found in the different binary objects, hence relocation process is required. It can happen that different binary objects get *different* resolutions of the same global symbol, because they will have different lookup scope.
